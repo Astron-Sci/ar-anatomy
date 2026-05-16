@@ -1,3 +1,4 @@
+.hidden { display: none !important; }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
 
@@ -70,6 +71,60 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font
 }
 #status-text { color: rgba(255,255,255,0.8); font-size: 12px; }
 #fps-display { color: #4caf50; font-size: 12px; font-weight: 700; }
+
+/* ── Load Error ── */
+#load-error {
+    position: absolute; top: 80px; left: 50%; transform: translateX(-50%);
+    z-index: 10;
+    background: rgba(200,50,50,0.85);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    padding: 14px 20px; border-radius: 12px;
+    text-align: center;
+    max-width: 300px;
+    pointer-events: none;
+}
+#load-error p { color: #fff; font-size: 13px; line-height: 1.5; }
+
+/* ── Start Overlay ── */
+#start-overlay {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 10;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.85);
+    pointer-events: auto;
+}
+#start-overlay.hidden { display: none; }
+.start-box {
+    text-align: center;
+    padding: 40px 30px;
+    max-width: 320px;
+}
+.start-box h2 {
+    color: #fff; font-size: 26px; font-weight: 800;
+    margin-bottom: 10px;
+}
+.start-box p {
+    color: rgba(255,255,255,0.6); font-size: 14px;
+    line-height: 1.5; margin-bottom: 24px;
+}
+#btn-start {
+    display: inline-block;
+    padding: 16px 48px;
+    border: none; border-radius: 30px;
+    background: linear-gradient(135deg, #ffeb3b, #ffc107);
+    color: #1a1a1a;
+    font-size: 18px; font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(255,235,59,0.3);
+    transition: transform 0.15s;
+    pointer-events: auto;
+}
+#btn-start:active { transform: scale(0.95); }
+.start-tip {
+    color: rgba(255,255,255,0.3) !important;
+    font-size: 12px !important;
+    margin-top: 16px !important;
+}
 
 #instructions {
     pointer-events: none;

@@ -9,40 +9,47 @@
 <body>
     <div id="app">
         <div id="video-container">
-            <video id="video" playsinline></video>
+            <video id="video" playsinline autoplay muted></video>
             <canvas id="canvas-2d"></canvas>
         </div>
         <div id="three-container"></div>
         <div id="ui-overlay">
-            <div id="header">
+            <div id="header" class="hidden">
                 <h1>🧠 AR 人体解剖</h1>
-                <p class="subtitle">将摄像头对准全身，3D模型将跟随你的身体</p>
+                <p class="subtitle">手机摄像头识别人体，叠加3D解剖模型</p>
             </div>
-            <div id="controls">
+            <div id="load-error" class="hidden">
+                <p>⚠️ 模型加载失败，请尝试：</p>
+                <p>1. 刷新页面重试<br>2. 切换 WiFi / 开4G<br>3. 使用 Safari 浏览器</p>
+            </div>
+            <div id="controls" class="hidden">
                 <button id="btn-bones" class="active" data-layer="skeleton">🦴 骨骼</button>
                 <button id="btn-muscles" data-layer="muscles">💪 肌肉</button>
                 <button id="btn-organs" data-layer="organs">🫀 器官</button>
                 <button id="btn-all">👤 全部</button>
             </div>
-            <div id="status-bar">
-                <span id="status-text">📷 正在加载摄像头...</span>
+            <div id="status-bar" class="hidden">
+                <span id="status-text">启动中...</span>
                 <span id="fps-display"></span>
+            </div>
+            <div id="start-overlay">
+                <div class="start-box">
+                    <h2>🧠 AR 人体解剖</h2>
+                    <p>通过摄像头叠加3D骨骼/肌肉/器官模型<br>实时跟踪你的身体</p>
+                    <button id="btn-start">🔍 开始体验</button>
+                    <p class="start-tip">请站在距手机1.5-2米处，让全身入画</p>
+                </div>
             </div>
             <div id="instructions">
                 <p>📱 站在距手机1.5-2米处，让身体完整出现在画面中</p>
             </div>
         </div>
     </div>
-    <script type="importmap">
-    {
-        "imports": {
-            "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"
-        }
-    }
-    </script>
+    
+    <!-- Scripts loaded from accessible CDNs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
-    <script type="module" src="app.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
