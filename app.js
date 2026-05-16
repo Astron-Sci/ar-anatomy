@@ -337,8 +337,8 @@ async function startCamera() {
         poseInstance.setOptions({
             modelComplexity: 0,
             smoothLandmarks: true,
-            minDetectionConfidence: 0.5,
-            minTrackingConfidence: 0.5
+            minDetectionConfidence: 0.3,
+            minTrackingConfidence: 0.3
         });
         poseInstance.onResults(onPoseResults);
 
@@ -357,20 +357,19 @@ async function startCamera() {
                         console.log('Frame ' + frameCount + ' sent to pose');
                     }
                 } catch(e) { 
-                    console.warn('Pose send error:', e);
-                    if (frameCount % 30 === 0) {
-                        setStatus('\u26A0\uFE0F AI读取失败: ' + e.message?.slice(0,30));
+                    if (frameCount % 100 === 0) {
+                        console.log('Frame', frameCount, 'processed');
                     }
-                }
-            } else {
-                if (frameCount % 30 === 0) {
-                    setStatus('\u23F3 \u89C6频源尚未就绪...');
+                } catch(e) { 
+                    if (frameCount % 100 === 0) {
+                        console.warn('Pose error:', e.message);
+                    }
                 }
             }
             requestAnimationFrame(processFrame);
         }
         processFrame();
-        setStatus('\u23F3 \u7B49待人体检测...');
+        setStatus('请面对摄像头，站1.5-2米处');
     } catch (err) {
         setStatus('❌ ' + (err.name === 'NotAllowedError' ? '摄像头被拒绝，请在设置中允许' : err.message));
         console.error('Camera error:', err);
