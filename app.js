@@ -114,11 +114,40 @@ function onPoseResults(r) {
     }
 }
 
+// ── Camera selection ──
+let videoDevices = [];
+
+async function listCameras() {
+    const d = await navigator.mediaDevices.enumerateDevices();
+    videoDevices = d.filter(x => x.kind === 'videoinput');
+    console.log('Available cameras:');
+    videoDevices.forEach((c, i) => console.log(i + ':', c.label || '(no label)', 'deviceId:', c.deviceId));
+    return videoDevices;
+}
+
 // ── Start Camera ──
-async function startCamera() {
+async function startCamera(deviceId) {
     try {
         setStatus('请求摄像头...');
-        curStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width:{ideal:640}, height:{ideal:480} } });
+        const constraints = deviceId
+            ? { video: { deviceId: { exact: deviceId }, width:{ideal:640}, height:{ideal:480} } }
+            : { video: { facingMode: 'environment', width:{ideal:640}, height:{ideal:480} } };
+        curStream = await navigator.mediaDevices.getUserMedia(constraints);
+        
+        // After camera starts, list all cameras (iOS now reveals labels)
+        const allCams = await listCameras();
+        // Populate camera selector
+        const sel = $('cam-select');
+        sel.innerHTML = '<option value="">选择摄像头...</option>';
+        allCams.forEach((c, i) => {
+            const opt = document.createElement('option');
+            opt.value = c.deviceId;
+            opt.textContent = (i+1) + '. ' + (c.label || 'Camera ' + (i+1));
+            sel.appendChild(opt);
+        });
+        sel.classList.remove('hidden');
+        console.log('Cameras found:', allCams.length);
+        allCams.forEach((c,i) => console.log(i+':', c.label, '->', c.deviceId));
         let video = $('video'); video.srcObject = curStream; await video.play();
 
         // Start AI detection
@@ -191,7 +220,15 @@ $('btn-start').addEventListener('click', async ()=>{
     setStatus('启动...'); await startCamera(); initThree(); setupUI(); setupZoom(); animate();
 });
 
-// Manual mode button (always available)
+// Camera selector change
+$('cam-select').addEventListener('change', async function() {
+    if (!this.value) return;
+    if (poseInst) { try{camInst&&camInst.stop()}catch(e){} poseInst=null; }
+    if (curStream) curStream.getTracks().forEach(t=>t.stop());
+    await startCamera(this.value);
+});
+
+// Manual mode button
 $('btn-manual').addEventListener('click', ()=>{
     if (poseInst) { try{camInst&&camInst.stop()}catch(e){} poseInst=null; }
     if (manualTimeout) { clearTimeout(manualTimeout); manualTimeout=null; }

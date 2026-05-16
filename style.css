@@ -1,6 +1,6 @@
 .hidden { display: none !important; }
 * { margin: 0; padding: 0; box-sizing: border-box; }
-html, body { touch-action: none; -webkit-overflow-scrolling: auto; }
+html, body { touch-action: none; }
 html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
 
 #app { position: relative; width: 100vw; height: 100vh; }
@@ -130,6 +130,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font
 #camera-control {
     position: absolute; top: 70px; right: 16px;
     z-index: 5;
+    pointer-events: auto;
 }
 #btn-switch-cam {
     pointer-events: auto;
@@ -158,6 +159,20 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font
 }
 #btn-manual:active { transform: scale(0.95); }
 
+#cam-select {
+    pointer-events: auto;
+    border: none; border-radius: 16px;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    color: #fff;
+    padding: 6px 12px;
+    font-size: 12px;
+    margin-left: 6px;
+    max-width: 160px;
+    outline: none;
+}
+#cam-select option { background: #333; color: #fff; }
+
 /* ── Zoom Slider (Vertical, Left Side) ── */
 #zoom-control {
     position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
@@ -167,6 +182,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font
     backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
     padding: 10px 6px;
     border-radius: 20px;
+    pointer-events: auto;
 }
 #zoom-label {
     color: #fff; font-size: 11px; font-weight: 600;
@@ -178,7 +194,8 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font
     background: rgba(255,255,255,0.3);
     border-radius: 2px;
     outline: none;
-    touch-action: none;
+    touch-action: auto;
+    pointer-events: auto;
     writing-mode: vertical-lr;
     direction: rtl;
 }
