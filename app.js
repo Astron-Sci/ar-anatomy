@@ -244,7 +244,7 @@ async function startCamera() {
     try {
         setStatus('⏳ 请求摄像头权限...');
         const stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }
+            video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } }
         });
         const video = document.getElementById('video');
         video.srcObject = stream;

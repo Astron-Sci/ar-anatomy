@@ -8,7 +8,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     z-index: 0;
 }
-#video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+#video { width: 100%; height: 100%; object-fit: cover; }
 #canvas-2d {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     display: none; /* Hide 2D canvas, use 3D instead */
@@ -17,7 +17,6 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font
 #three-container {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     z-index: 1; pointer-events: none;
-    transform: scaleX(-1);
 }
 
 #ui-overlay {
