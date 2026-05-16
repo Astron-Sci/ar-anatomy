@@ -172,15 +172,18 @@ async function startCamera(deviceId) {
     }
 }
 
-// ── Zoom ──
+// ── Zoom (Buttons) ──
 function updateZoom(v) {
-    zoomLevel = v||parseFloat($('zoom-slider').value);
+    zoomLevel = Math.max(0.5, Math.min(5.0, v || zoomLevel));
     $('video').style.transform = 'scale('+zoomLevel+')';
     $('three-container').style.transform = 'scale('+zoomLevel+')';
     if (camera3d) { camera3d.zoom=1/zoomLevel; camera3d.updateProjectionMatrix(); }
     $('zoom-label').textContent = zoomLevel.toFixed(1)+'x';
 }
-function setupZoom() { $('zoom-slider').addEventListener('input', function(){updateZoom();}); }
+function setupZoom() {
+    $('zoom-in').addEventListener('click', ()=>updateZoom(+(zoomLevel+0.2).toFixed(1)));
+    $('zoom-out').addEventListener('click', ()=>updateZoom(+(zoomLevel-0.2).toFixed(1)));
+}
 
 // ── Animation ──
 function animate(t) {
@@ -214,10 +217,32 @@ function setupUI() {
     });
 }
 
+// ── Ensure THREE is loaded ──
+function ensureThree() {
+    return new Promise((resolve, reject) => {
+        if (typeof THREE !== 'undefined') return resolve();
+        // THREE not loaded yet - add a fallback script
+        const s = document.createElement('script');
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+        s.onload = resolve;
+        s.onerror = () => reject(new Error('Three.js failed to load from all CDNs'));
+        document.head.appendChild(s);
+    });
+}
+
 // ── Init ──
 $('btn-start').addEventListener('click', async ()=>{
     hide('start-overlay'); show('header'); show('status-bar'); show('controls'); show('camera-control'); show('zoom-control');
-    setStatus('启动...'); await startCamera(); initThree(); setupUI(); setupZoom(); animate();
+    setStatus('启动...');
+    await ensureThree();
+    await startCamera();
+    initThree();
+    // Add test indicator - red dot confirms Three.js is rendering
+    const dot = document.createElement('div');
+    dot.style.cssText = 'position:absolute;bottom:60px;left:50%;transform:translateX(-50%);z-index:20;width:12px;height:12px;border-radius:50%;background:#0f0;';
+    dot.id = 'three-dot';
+    $('ui-overlay').appendChild(dot);
+    setupUI(); setupZoom(); animate();
 });
 
 // Camera selector change

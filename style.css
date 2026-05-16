@@ -173,39 +173,36 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font
 }
 #cam-select option { background: #333; color: #fff; }
 
-/* ── Zoom Slider (Vertical, Left Side) ── */
+/* ── Zoom Buttons (Vertical, Left Side) ── */
 #zoom-control {
     position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
     z-index: 5;
-    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
     background: rgba(0,0,0,0.45);
     backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-    padding: 10px 6px;
+    padding: 8px 6px;
     border-radius: 20px;
     pointer-events: auto;
 }
 #zoom-label {
     color: #fff; font-size: 11px; font-weight: 600;
     text-align: center;
+    margin: 2px 0;
 }
-#zoom-slider {
-    -webkit-appearance: none; appearance: none;
-    width: 120px; height: 4px;
-    background: rgba(255,255,255,0.3);
-    border-radius: 2px;
-    outline: none;
-    touch-action: auto;
+#zoom-control button {
     pointer-events: auto;
-    writing-mode: vertical-lr;
-    direction: rtl;
-}
-#zoom-slider::-webkit-slider-thumb {
-    -webkit-appearance: none; appearance: none;
-    width: 18px; height: 18px;
-    background: #ffeb3b;
-    border-radius: 50%;
+    border: none; border-radius: 50%;
+    width: 36px; height: 36px;
+    background: rgba(255,255,255,0.2);
+    color: #fff;
+    font-size: 20px; font-weight: 700;
     cursor: pointer;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    display: flex; align-items: center; justify-content: center;
+    touch-action: manipulation;
+}
+#zoom-control button:active {
+    background: rgba(255,255,255,0.4);
+    transform: scale(0.9);
 }
 
 #instructions {
