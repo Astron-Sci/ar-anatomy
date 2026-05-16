@@ -218,8 +218,11 @@ function onPoseResults(results) {
         setStatus('✅ 已跟踪');
     }
     state.landmarks = results.poseLandmarks;
-    bodyGroup.visible = true;
-    updateBodyLandmarks(results.poseLandmarks);
+    // Guard: Three.js might not be ready yet
+    if (bodyGroup) {
+        bodyGroup.visible = true;
+        updateBodyLandmarks(results.poseLandmarks);
+    }
 }
 
 // ── Animation ──
@@ -322,11 +325,11 @@ document.getElementById('btn-start').addEventListener('click', async () => {
     show('header');
     show('status-bar');
     show('controls');
-    setStatus('🔧 初始化...');
+    // iOS顺序至关重要：先启动摄像头，再初始化Three.js
+    setStatus('📷 请求摄像头...');
+    await startCamera();
+    // Three.js在摄像头之后初始化，避免WebGL与摄像头冲突
     initThree();
     setupUI();
     animate();
-    // Small delay for iOS Safari to settle
-    await new Promise(r => setTimeout(r, 200));
-    await startCamera();
 });
