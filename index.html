@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AR人体解剖 - Body AR Anatomy</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <div id="video-container">
+            <video id="video" playsinline></video>
+            <canvas id="canvas-2d"></canvas>
+        </div>
+        <div id="three-container"></div>
+        <div id="ui-overlay">
+            <div id="header">
+                <h1>🧠 AR 人体解剖</h1>
+                <p class="subtitle">将摄像头对准全身，3D模型将跟随你的身体</p>
+            </div>
+            <div id="controls">
+                <button id="btn-bones" class="active" data-layer="skeleton">🦴 骨骼</button>
+                <button id="btn-muscles" data-layer="muscles">💪 肌肉</button>
+                <button id="btn-organs" data-layer="organs">🫀 器官</button>
+                <button id="btn-all">👤 全部</button>
+            </div>
+            <div id="status-bar">
+                <span id="status-text">📷 正在加载摄像头...</span>
+                <span id="fps-display"></span>
+            </div>
+            <div id="instructions">
+                <p>📱 站在距手机1.5-2米处，让身体完整出现在画面中</p>
+            </div>
+        </div>
+    </div>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"
+        }
+    }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+    <script type="module" src="app.js"></script>
+</body>
+</html>
