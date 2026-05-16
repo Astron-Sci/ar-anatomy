@@ -2,39 +2,6 @@
 
 基于 WebAR 的人体解剖教学工具，通过手机摄像头识别人体姿态，叠加 3D 骨骼/肌肉/器官模型。
 
-## 使用方法
-
-### 方式一：本地 HTTP 服务运行（推荐）
-
-```bash
-# 安装一个简单的 HTTP 服务器（如果还没有）
-npm install -g http-server
-# 或使用 Python
-python3 -m http.server 8080
-
-# 在项目目录下启动
-cd ar_anatomy
-python3 -m http.server 8080
-```
-
-然后打开手机浏览器访问：`http://你的IP:8080`
-
-**必须通过 HTTPS 访问（摄像头需要安全上下文），本地开发可以用：**
-- `http://localhost:8080` （localhost 被视为安全）
-- 手机访问局域网地址需使用 HTTPS（或使用 ngrok）
-
-### 方式二：使用 ngrok 临时部署
-
-```bash
-ngrok http 8080
-```
-生成一个公网 HTTPS 链接，手机打开即可使用。
-
-### 方式三：部署到 GitHub Pages
-
-1. 将 `ar_anatomy/` 内容推送到 GitHub 仓库
-2. 启用 GitHub Pages（Settings → Pages）
-3. 通过 GitHub 提供的 HTTPS 链接访问
 
 ## 使用说明
 
