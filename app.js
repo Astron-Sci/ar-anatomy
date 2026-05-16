@@ -260,12 +260,12 @@ async function startCamera() {
             locateFile: (file) => {
                 clearTimeout(timeoutId);
                 // Try multiple CDNs for Chinese users
-                return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
+                return `https://unpkg.com/@mediapipe/pose/${file}`;
             }
         });
 
         pose.setOptions({
-            modelComplexity: 1,
+            modelComplexity: 0,
             smoothLandmarks: true,
             minDetectionConfidence: 0.5,
             minTrackingConfidence: 0.5
