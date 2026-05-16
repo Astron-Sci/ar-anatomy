@@ -107,9 +107,21 @@ function onPoseResults(r) {
     if (manualTimeout) { clearTimeout(manualTimeout); manualTimeout = null; }
     state.landmarks = r.poseLandmarks;
     if (bodyGroup) { bodyGroup.visible = true;
-        const g=(i)=>({x:r.poseLandmarks[i].x-0.5,y:-(r.poseLandmarks[i].y-0.5)*1.8,z:(r.poseLandmarks[i].z||0)*3});
+        // Calculate frustum size at model depth for correct coordinate mapping
+        const dist = 3.5; // camera at z=3, model at z=-0.5, distance = 3.5
+        const fovRad = 45 * Math.PI / 180;
+        const frustumH = 2 * dist * Math.tan(fovRad / 2);
+        const frustumW = frustumH * (($('three-container').clientWidth || window.innerWidth) / ($('three-container').clientHeight || window.innerHeight));
+        
+        const g=(i)=>({
+            x: (r.poseLandmarks[i].x - 0.5) * frustumW,
+            y: -(r.poseLandmarks[i].y - 0.5) * frustumH,
+            z: (r.poseLandmarks[i].z || 0) * 2
+        });
         const ls=g(11),rs=g(12),lh=g(23),rh=g(24);
-        const cx=(ls.x+rs.x+lh.x+rh.x)/4,cy=(ls.y+rs.y+lh.y+rh.y)/4,bw=Math.abs(rs.x-ls.x),s=bw>0.1?bw*1.5:0.5;
+        const cx=(ls.x+rs.x+lh.x+rh.x)/4,cy=(ls.y+rs.y+lh.y+rh.y)/4;
+        const bw=Math.abs(rs.x-ls.x);
+        const s=bw>0.05 ? Math.min(3, Math.max(0.3, bw * 2.5)) : 0.5;
         bodyGroup.position.set(cx,cy,0); bodyGroup.scale.set(s,s,s);
     }
 }
