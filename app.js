@@ -56,7 +56,20 @@ function initThree() {
     bodyGroup.add(skeletonGroup);
     bodyGroup.add(muscleGroup);
     bodyGroup.add(organGroup);
-    bodyGroup.visible = false;
+    // 3D model visible by default (shows at screen center until person detected)
+    bodyGroup.position.set(0, 0.2, -0.5);
+    bodyGroup.scale.set(0.5, 0.5, 0.5);
+    bodyGroup.visible = true;
+    
+    // Add a test cube - visible for 3 seconds to confirm Three.js works
+    const testCube = new THREE.Mesh(
+        new THREE.BoxGeometry(0.15, 0.15, 0.15),
+        new THREE.MeshBasicMaterial({ color: 0xff0000 })
+    );
+    testCube.position.set(0, 0, -0.8);
+    scene.add(testCube);
+    setTimeout(() => scene.remove(testCube), 3000);
+    console.log('Three.js initialized, test cube added');
 }
 
 // ── Build Skeleton ──
@@ -205,7 +218,7 @@ function updateBodyLandmarks(landmarks) {
 
 // ── Pose Callback ──
 function onPoseResults(results) {
-    if (!results || !results.poseLandmarks) {
+    if (!results || !results.poseLandmarks || results.poseLandmarks.length < 33) {
         if (state.tracking) {
             bodyGroup.visible = false;
             state.tracking = false;
@@ -244,6 +257,58 @@ let useFrontCamera = false;
 let currentStream = null;
 let poseInstance = null;
 let cameraInstance = null;
+
+// ── Pinch Zoom ──
+let zoomLevel = 1.0;
+let lastPinchDist = 0;
+const MIN_ZOOM = 1.0;
+const MAX_ZOOM = 5.0;
+
+function updateZoom() {
+    const video = document.getElementById('video');
+    const container = document.getElementById('three-container');
+    const scale = zoomLevel;
+    video.style.transform = 'scale(' + scale + ')';
+    container.style.transform = 'scale(' + scale + ')';
+    // Update Three.js camera to match zoom
+    if (camera) {
+        camera.zoom = 1 / scale;
+        camera.updateProjectionMatrix();
+    }
+    document.getElementById('zoom-level').textContent = '\uD83D\uDD0D ' + zoomLevel.toFixed(1) + 'x';
+}
+
+function setupPinchZoom() {
+    const app = document.getElementById('app');
+    app.addEventListener('touchstart', function(e) {
+        if (e.touches.length === 2) {
+            const dx = e.touches[0].clientX - e.touches[1].clientX;
+            const dy = e.touches[0].clientY - e.touches[1].clientY;
+            lastPinchDist = Math.sqrt(dx*dx + dy*dy);
+        }
+    }, { passive: true });
+    
+    app.addEventListener('touchmove', function(e) {
+        if (e.touches.length === 2) {
+            e.preventDefault();
+            const dx = e.touches[0].clientX - e.touches[1].clientX;
+            const dy = e.touches[0].clientY - e.touches[1].clientY;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            if (lastPinchDist > 0) {
+                const delta = dist / lastPinchDist;
+                zoomLevel = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoomLevel * delta));
+                updateZoom();
+            }
+            lastPinchDist = dist;
+        }
+    }, { passive: false });
+    
+    app.addEventListener('touchend', function(e) {
+        if (e.touches.length < 2) {
+            lastPinchDist = 0;
+        }
+    }, { passive: true });
+}
 
 // ── Start/Stop Camera ──
 function stopCamera() {
@@ -310,15 +375,31 @@ async function startCamera() {
         let frameRunning = true;
         cameraInstance = { stop: () => { frameRunning = false; } };
         
+        let frameCount = 0;
         async function processFrame() {
             if (!frameRunning) return;
+            frameCount++;
             if (video.readyState >= 2) {
-                try { await poseInstance.send({ image: video }); } catch(e) {}
+                try { 
+                    await poseInstance.send({ image: video }); 
+                    if (frameCount % 30 === 0) {
+                        console.log('Frame ' + frameCount + ' sent to pose');
+                    }
+                } catch(e) { 
+                    console.warn('Pose send error:', e);
+                    if (frameCount % 30 === 0) {
+                        setStatus('\u26A0\uFE0F AI读取失败: ' + e.message?.slice(0,30));
+                    }
+                }
+            } else {
+                if (frameCount % 30 === 0) {
+                    setStatus('\u23F3 \u89C6频源尚未就绪...');
+                }
             }
             requestAnimationFrame(processFrame);
         }
         processFrame();
-        setStatus('✅ 运行中');
+        setStatus('\u23F3 \u7B49待人体检测...');
     } catch (err) {
         setStatus('❌ ' + (err.name === 'NotAllowedError' ? '摄像头被拒绝，请在设置中允许' : err.message));
         console.error('Camera error:', err);
@@ -373,9 +454,9 @@ document.getElementById('btn-start').addEventListener('click', async () => {
     // iOS顺序至关重要：先启动摄像头，再初始化Three.js
     setStatus('📷 请求摄像头...');
     await startCamera();
-    // Three.js在摄像头之后初始化，避免WebGL与摄像头冲突
     initThree();
     setupUI();
+    setupPinchZoom();
     animate();
 });
 
