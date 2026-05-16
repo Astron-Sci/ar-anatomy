@@ -99,7 +99,8 @@ function enableDrag() {
 function onPoseResults(r) {
     if (state.manualMode) return;
     if (!r||!r.poseLandmarks||r.poseLandmarks.length<33) {
-        if (state.tracking) { bodyGroup.visible = false; state.tracking = false; setStatus('未检测到人体'); }
+        // Keep model visible at default position when no one detected
+        if (state.tracking) { state.tracking = false; setStatus('未检测到人体 - 骨架显示在中央'); }
         return;
     }
     if (!state.tracking) { state.tracking = true; setStatus('已跟踪'); hide('manual-btn'); }
