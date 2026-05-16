@@ -1,5 +1,6 @@
 .hidden { display: none !important; }
 * { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { touch-action: none; -webkit-overflow-scrolling: auto; }
 html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
 
 #app { position: relative; width: 100vw; height: 100vh; }
@@ -143,15 +144,35 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font
 }
 #btn-switch-cam:active { transform: scale(0.95); }
 
-#zoom-level {
-    display: inline-block;
-    background: rgba(0,0,0,0.4);
+/* ── Zoom Slider ── */
+#zoom-control {
+    position: absolute; bottom: 135px; left: 50%; transform: translateX(-50%);
+    z-index: 5;
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(0,0,0,0.45);
     backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-    color: #fff;
-    padding: 6px 10px;
-    border-radius: 16px;
-    font-size: 12px;
-    margin-left: 8px;
+    padding: 6px 14px;
+    border-radius: 20px;
+}
+#zoom-label {
+    color: #fff; font-size: 13px; font-weight: 600;
+    min-width: 36px; text-align: center;
+}
+#zoom-slider {
+    -webkit-appearance: none; appearance: none;
+    width: 100px; height: 4px;
+    background: rgba(255,255,255,0.3);
+    border-radius: 2px;
+    outline: none;
+    touch-action: none;
+}
+#zoom-slider::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 18px; height: 18px;
+    background: #ffeb3b;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
 }
 
 #instructions {

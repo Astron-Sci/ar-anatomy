@@ -258,56 +258,27 @@ let currentStream = null;
 let poseInstance = null;
 let cameraInstance = null;
 
-// ── Pinch Zoom ──
+// ── Zoom Slider ──
 let zoomLevel = 1.0;
-let lastPinchDist = 0;
-const MIN_ZOOM = 1.0;
+const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 5.0;
 
-function updateZoom() {
-    const video = document.getElementById('video');
-    const container = document.getElementById('three-container');
-    const scale = zoomLevel;
-    video.style.transform = 'scale(' + scale + ')';
-    container.style.transform = 'scale(' + scale + ')';
-    // Update Three.js camera to match zoom
+function updateZoom(val) {
+    zoomLevel = val || parseFloat(document.getElementById('zoom-slider').value);
+    const v = document.getElementById('video');
+    const c = document.getElementById('three-container');
+    v.style.transform = 'scale(' + zoomLevel + ')';
+    c.style.transform = 'scale(' + zoomLevel + ')';
     if (camera) {
-        camera.zoom = 1 / scale;
+        camera.zoom = 1 / zoomLevel;
         camera.updateProjectionMatrix();
     }
-    document.getElementById('zoom-level').textContent = '\uD83D\uDD0D ' + zoomLevel.toFixed(1) + 'x';
+    document.getElementById('zoom-label').textContent = zoomLevel.toFixed(1) + 'x';
 }
 
-function setupPinchZoom() {
-    const app = document.getElementById('app');
-    app.addEventListener('touchstart', function(e) {
-        if (e.touches.length === 2) {
-            const dx = e.touches[0].clientX - e.touches[1].clientX;
-            const dy = e.touches[0].clientY - e.touches[1].clientY;
-            lastPinchDist = Math.sqrt(dx*dx + dy*dy);
-        }
-    }, { passive: true });
-    
-    app.addEventListener('touchmove', function(e) {
-        if (e.touches.length === 2) {
-            e.preventDefault();
-            const dx = e.touches[0].clientX - e.touches[1].clientX;
-            const dy = e.touches[0].clientY - e.touches[1].clientY;
-            const dist = Math.sqrt(dx*dx + dy*dy);
-            if (lastPinchDist > 0) {
-                const delta = dist / lastPinchDist;
-                zoomLevel = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoomLevel * delta));
-                updateZoom();
-            }
-            lastPinchDist = dist;
-        }
-    }, { passive: false });
-    
-    app.addEventListener('touchend', function(e) {
-        if (e.touches.length < 2) {
-            lastPinchDist = 0;
-        }
-    }, { passive: true });
+function setupZoom() {
+    const slider = document.getElementById('zoom-slider');
+    slider.addEventListener('input', function() { updateZoom(); });
 }
 
 // ── Start/Stop Camera ──
@@ -451,12 +422,13 @@ document.getElementById('btn-start').addEventListener('click', async () => {
     show('status-bar');
     show('controls');
     show('camera-control');
+    show('zoom-control');
     // iOS顺序至关重要：先启动摄像头，再初始化Three.js
     setStatus('📷 请求摄像头...');
     await startCamera();
     initThree();
     setupUI();
-    setupPinchZoom();
+    setupZoom();
     animate();
 });
 
