@@ -239,54 +239,57 @@ function animate(time) {
     renderer.render(scene, camera);
 }
 
-// ── Start Camera ──
+// ── Camera State ──
+let useFrontCamera = false;
+let currentStream = null;
+let poseInstance = null;
+let cameraInstance = null;
+
+// ── Start/Stop Camera ──
+function stopCamera() {
+    if (currentStream) {
+        currentStream.getTracks().forEach(t => t.stop());
+        currentStream = null;
+    }
+}
+
 async function startCamera() {
     try {
         setStatus('⏳ 请求摄像头权限...');
-        // Request REAR camera with fallback
-        let stream;
-        try {
-            stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: { exact: 'environment' }, width: { ideal: 640 }, height: { ideal: 480 } }
-            });
-        } catch (e) {
-            // Fallback: allow any camera
-            console.warn('Rear camera not available, using default');
-            stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } }
-            });
-        }
+        const facingMode = useFrontCamera ? 'user' : 'environment';
+        stopCamera();
+        currentStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: facingMode, width: { ideal: 640 }, height: { ideal: 480 } }
+        });
         const video = document.getElementById('video');
-        video.srcObject = stream;
+        video.srcObject = currentStream;
         await video.play();
         setStatus('⏳ 正在加载AI模型...');
 
-        // Fallback: if MediaPipe Pose CDN is slow, show a timeout warning
         const timeoutId = setTimeout(() => {
             setStatus('⌛ AI模型下载中，首次加载约需30秒...');
         }, 8000);
 
-        const pose = new window.Pose({
+        poseInstance = new window.Pose({
             locateFile: (file) => {
                 clearTimeout(timeoutId);
-                // Try multiple CDNs for Chinese users
                 return `https://unpkg.com/@mediapipe/pose/${file}`;
             }
         });
 
-        pose.setOptions({
+        poseInstance.setOptions({
             modelComplexity: 0,
             smoothLandmarks: true,
             minDetectionConfidence: 0.5,
             minTrackingConfidence: 0.5
         });
-        pose.onResults(onPoseResults);
+        poseInstance.onResults(onPoseResults);
 
-        const cam = new window.Camera(video, {
-            onFrame: async () => { try { await pose.send({ image: video }); } catch(e) {} },
+        cameraInstance = new window.Camera(video, {
+            onFrame: async () => { try { await poseInstance.send({ image: video }); } catch(e) {} },
             width: 640, height: 480
         });
-        await cam.start();
+        await cameraInstance.start();
         setStatus('✅ 运行中');
     } catch (err) {
         setStatus('❌ ' + (err.name === 'NotAllowedError' ? '摄像头被拒绝，请在设置中允许' : err.message));
@@ -338,6 +341,7 @@ document.getElementById('btn-start').addEventListener('click', async () => {
     show('header');
     show('status-bar');
     show('controls');
+    show('camera-control');
     // iOS顺序至关重要：先启动摄像头，再初始化Three.js
     setStatus('📷 请求摄像头...');
     await startCamera();
@@ -345,4 +349,16 @@ document.getElementById('btn-start').addEventListener('click', async () => {
     initThree();
     setupUI();
     animate();
+});
+
+// Camera switch button
+document.getElementById('btn-switch-cam').addEventListener('click', async () => {
+    useFrontCamera = !useFrontCamera;
+    setStatus('Switching camera...');
+    if (cameraInstance) {
+        try { cameraInstance.stop(); } catch(e) {}
+        cameraInstance = null;
+    }
+    stopCamera();
+    await startCamera();
 });
