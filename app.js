@@ -256,6 +256,11 @@ function stopCamera() {
 async function startCamera() {
     try {
         setStatus('⏳ 请求摄像头权限...');
+        // Stop old camera instance frame loop
+        if (cameraInstance) {
+            try { cameraInstance.stop(); } catch(e) {}
+            cameraInstance = null;
+        }
         stopCamera();
         
         // Force REAR camera: enumerate all cameras, pick the last one (rear on iPhone)
@@ -301,11 +306,18 @@ async function startCamera() {
         });
         poseInstance.onResults(onPoseResults);
 
-        cameraInstance = new window.Camera(video, {
-            onFrame: async () => { try { await poseInstance.send({ image: video }); } catch(e) {} },
-            width: 640, height: 480
-        });
-        await cameraInstance.start();
+        // Use custom frame loop instead of MediaPipe Camera (which overrides our camera)
+        let frameRunning = true;
+        cameraInstance = { stop: () => { frameRunning = false; } };
+        
+        async function processFrame() {
+            if (!frameRunning) return;
+            if (video.readyState >= 2) {
+                try { await poseInstance.send({ image: video }); } catch(e) {}
+            }
+            requestAnimationFrame(processFrame);
+        }
+        processFrame();
         setStatus('✅ 运行中');
     } catch (err) {
         setStatus('❌ ' + (err.name === 'NotAllowedError' ? '摄像头被拒绝，请在设置中允许' : err.message));
