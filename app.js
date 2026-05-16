@@ -3,6 +3,7 @@ const state = { activeLayers: new Set(['skeleton']), tracking: false, landmarks:
 let scene, camera3d, renderer, bodyGroup, skelG, muscG, organG;
 let zoomLevel = 1.0, dragSX, dragSY, modelSX, modelSY, isDragging = false;
 let useFrontCam = false, curStream = null, poseInst = null, camInst = null;
+const ORTHO_VIEW_SIZE = 1.8;
 let manualTimeout = null;
 
 function $(id) { return document.getElementById(id); }
@@ -16,8 +17,11 @@ function initThree() {
     const w = c.clientWidth || window.innerWidth;
     const h = c.clientHeight || window.innerHeight;
     scene = new THREE.Scene(); scene.background = null;
-    camera3d = new THREE.PerspectiveCamera(45, w/h, 0.1, 100);
-    camera3d.position.set(0, 0, 3);
+    // Orthographic camera - maps 1:1 to screen coordinates
+    const aspect = w / h;
+    camera3d = new THREE.OrthographicCamera(-aspect * ORTHO_VIEW_SIZE, aspect * ORTHO_VIEW_SIZE, ORTHO_VIEW_SIZE, -ORTHO_VIEW_SIZE, 0.1, 10);
+    camera3d.position.set(0, 0, 2);
+    camera3d.lookAt(0, 0, 0);
     renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
     renderer.setSize(w, h); renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     c.appendChild(renderer.domElement);
@@ -26,9 +30,13 @@ function initThree() {
     d = new THREE.DirectionalLight(0xffffff, 0.3); d.position.set(-1,-1,-2); scene.add(d);
     bodyGroup = new THREE.Group(); scene.add(bodyGroup);
     window.addEventListener('resize', () => {
-        camera3d.aspect = ($('three-container').clientWidth||innerWidth) / ($('three-container').clientHeight||innerHeight);
+        const w = $('three-container').clientWidth||innerWidth;
+        const h = $('three-container').clientHeight||innerHeight;
+        const a = w / h;
+        camera3d.left = -a * ORTHO_VIEW_SIZE;
+        camera3d.right = a * ORTHO_VIEW_SIZE;
         camera3d.updateProjectionMatrix();
-        renderer.setSize($('three-container').clientWidth||innerWidth, $('three-container').clientHeight||innerHeight);
+        renderer.setSize(w, h);
     });
     skelG = buildSkeleton(); muscG = buildMuscles(); organG = buildOrgans();
     bodyGroup.add(skelG); bodyGroup.add(muscG); bodyGroup.add(organG);
@@ -67,21 +75,22 @@ function onPoseResults(r) {
     if (manualTimeout) { clearTimeout(manualTimeout); manualTimeout = null; }
     state.landmarks = r.poseLandmarks;
     if (bodyGroup) { bodyGroup.visible = true;
-        // Calculate frustum size at model depth for correct coordinate mapping
-        const dist = 3.5; // camera at z=3, model at z=-0.5, distance = 3.5
-        const fovRad = 45 * Math.PI / 180;
-        const frustumH = 2 * dist * Math.tan(fovRad / 2);
-        const frustumW = frustumH * (($('three-container').clientWidth || window.innerWidth) / ($('three-container').clientHeight || window.innerHeight));
+        const w = $('three-container').clientWidth || window.innerWidth;
+        const h = $('three-container').clientHeight || window.innerHeight;
+        const aspect = w / h;
+        const viewSize = ORTHO_VIEW_SIZE;
         
+        // Orthographic: landmark 0-1 maps to screen edges directly
         const g=(i)=>({
-            x: (r.poseLandmarks[i].x - 0.5) * frustumW,
-            y: -(r.poseLandmarks[i].y - 0.5) * frustumH,
-            z: (r.poseLandmarks[i].z || 0) * 2
+            x: (r.poseLandmarks[i].x - 0.5) * 2 * aspect * viewSize,
+            y: -(r.poseLandmarks[i].y - 0.5) * 2 * viewSize,
+            z: (r.poseLandmarks[i].z || 0) * 0.5
         });
         const ls=g(11),rs=g(12),lh=g(23),rh=g(24);
         const cx=(ls.x+rs.x+lh.x+rh.x)/4,cy=(ls.y+rs.y+lh.y+rh.y)/4;
         const bw=Math.abs(rs.x-ls.x);
-        const s=bw>0.05 ? Math.min(3, Math.max(0.3, bw * 2.5)) : 0.5;
+        // Body width in world units: 0.44 is the model's shoulder width at scale 1
+        const s=bw>0.05 ? Math.min(3, Math.max(0.3, bw / 0.44)) : 0.5;
         bodyGroup.position.set(cx,cy,0); bodyGroup.scale.set(s,s,s);
     }
 }
@@ -149,7 +158,15 @@ function updateZoom(v) {
     zoomLevel = Math.max(0.5, Math.min(5.0, v || zoomLevel));
     $('video').style.transform = 'scale('+zoomLevel+')';
     $('three-container').style.transform = 'scale('+zoomLevel+')';
-    if (camera3d) { camera3d.zoom=1/zoomLevel; camera3d.updateProjectionMatrix(); }
+    if (camera3d && camera3d.isOrthographicCamera) {
+        const vs = 1.8 * zoomLevel;
+        const a = ($('three-container').clientWidth||innerWidth) / ($('three-container').clientHeight||innerHeight);
+        camera3d.left = -a * vs;
+        camera3d.right = a * vs;
+        camera3d.top = vs;
+        camera3d.bottom = -vs;
+        camera3d.updateProjectionMatrix();
+    }
     $('zoom-label').textContent = zoomLevel.toFixed(1)+'x';
 }
 function setupZoom() {
