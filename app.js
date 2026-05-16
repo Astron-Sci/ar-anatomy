@@ -243,9 +243,19 @@ function animate(time) {
 async function startCamera() {
     try {
         setStatus('⏳ 请求摄像头权限...');
-        const stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } }
-        });
+        // Request REAR camera with fallback
+        let stream;
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: { exact: 'environment' }, width: { ideal: 640 }, height: { ideal: 480 } }
+            });
+        } catch (e) {
+            // Fallback: allow any camera
+            console.warn('Rear camera not available, using default');
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } }
+            });
+        }
         const video = document.getElementById('video');
         video.srcObject = stream;
         await video.play();
@@ -317,6 +327,9 @@ function setupUI() {
 }
 
 // ── Start ──
+// Version check
+console.log('AR Anatomy v3.1 - rear camera mode');
+
 let started = false;
 document.getElementById('btn-start').addEventListener('click', async () => {
     if (started) return;
