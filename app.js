@@ -256,10 +256,26 @@ function stopCamera() {
 async function startCamera() {
     try {
         setStatus('⏳ 请求摄像头权限...');
-        const facingMode = useFrontCamera ? 'user' : 'environment';
         stopCamera();
+        
+        // Force REAR camera: enumerate all cameras, pick the last one (rear on iPhone)
+        // First get permission with any camera
+        const tempStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        tempStream.getTracks().forEach(t => t.stop());
+        
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const cams = devices.filter(d => d.kind === 'videoinput');
+        
+        // Select camera: rear if multiple, or specified by toggle
+        let camIndex = cams.length - 1; // Default: last = rear
+        if (useFrontCamera) camIndex = 0; // Toggle to front
+        
         currentStream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: facingMode, width: { ideal: 640 }, height: { ideal: 480 } }
+            video: { 
+                deviceId: { exact: cams[camIndex].deviceId },
+                width: { ideal: 640 }, 
+                height: { ideal: 480 } 
+            }
         });
         const video = document.getElementById('video');
         video.srcObject = currentStream;
